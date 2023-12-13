@@ -7,9 +7,21 @@
 
 import UIKit
 
-class ViewController: UIViewController, UIPickerViewDataSource, UIPickerViewDelegate {
+class ViewController: UIViewController, UIPickerViewDataSource, UIPickerViewDelegate, CoinManagerDelegate {
+    //Need to change this to a var to be able to modify its properties.
+    var coinManager = CoinManager()
     
-    let coinManager = CoinManager()
+    // CoinManagerDelegate
+    //When the coinManager gets the price it will call this method and pass over the price and currency.
+    func didUpdateCoin(lastPrice: Double) {
+        DispatchQueue.main.async {
+            self.bitcoinLabel.text = String(format: "%.2f", lastPrice)
+        }
+    }
+    
+    func didFailWithError(error: Error) {
+        print(error)
+    }
     
     // UIPickerViewDataSource
     func numberOfComponents(in pickerView: UIPickerView) -> Int {
@@ -26,6 +38,7 @@ class ViewController: UIViewController, UIPickerViewDataSource, UIPickerViewDele
     }
     
     func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
+        currencyLabel.text = coinManager.currencyArray[row]
         coinManager.getCoinPrice(for: coinManager.currencyArray[row])
     }
 
@@ -38,6 +51,8 @@ class ViewController: UIViewController, UIPickerViewDataSource, UIPickerViewDele
         
         currencyPicker.dataSource = self
         currencyPicker.delegate = self
+        
+        coinManager.delegate = self
     }
 
 

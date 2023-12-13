@@ -9,11 +9,21 @@ import Foundation
 
 let apiKey = Bundle.main.infoDictionary?["API_KEY"] as? String ?? ""
 
+protocol CoinManagerDelegate {
+    func didUpdateCoin(lastPrice: Double)
+    
+    func didFailWithError(error: Error)
+}
+
 struct CoinManager {
     
     let baseURL = "https://rest.coinapi.io/v1/exchangerate/BTC"
         
     let currencyArray = ["AUD", "BRL","CAD","CNY","EUR","GBP","HKD","IDR","ILS","INR","JPY","MXN","NOK","NZD","PLN","RON","RUB","SEK","SGD","USD","ZAR"]
+    
+    //Create an optional delegate that will have to implement the delegate methods.
+    //Which we can notify when we have updated the price.
+    var delegate: CoinManagerDelegate?
     
     func getCoinPrice(for currency: String) {
         let urlString = "\(baseURL)/\(currency)?apikey=\(apiKey)"
@@ -29,14 +39,15 @@ struct CoinManager {
                     // 3. Give the session a task:
                     let task = session.dataTask(with: url) { data, response, error in
                         if error != nil {
-                            //self.delegate?.didFailWithError(error: error!)
+                            self.delegate?.didFailWithError(error: error!)
                             return
                         }
                         if let safeData = data {
                             //let dataString = String(data: safeData, encoding: .utf8)
                             //print(dataString!)
                             if let lastCoinPrice = self.parseJSON(safeData){
-                                //self.delegate?.didUpdateCoin(self, lastPrice: lastCoinPrice)
+                                //Call the delegate method in the delegate (ViewController) and pass along the necessary data.
+                                self.delegate?.didUpdateCoin(lastPrice: lastCoinPrice)
                             }
                         }
                     }
@@ -50,10 +61,9 @@ struct CoinManager {
         do{
             let decodedData = try decoder.decode(CoinData.self, from: coinData)
             let rate = decodedData.rate
-            print(rate)
             return rate
         } catch {
-            print(error)
+            delegate?.didFailWithError(error: error)
             return nil
         }
     }
