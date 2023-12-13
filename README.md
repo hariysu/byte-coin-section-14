@@ -1,4 +1,4 @@
-# Clima-Section-13
+# Byte-Coin-Section-13
 
 ## Key concepts shown in this section are:
 
